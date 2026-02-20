@@ -81,11 +81,10 @@ class Apple(GameObject):
         Генерирует случайную позицию на игровом поле,
         кратную размеру сетки.
         """
-        position = (
+        return (
             GRID_SIZE * randint(0, GRID_WIDTH - 1),
             GRID_SIZE * randint(0, GRID_HEIGHT - 1)
         )
-        return position
 
     def draw(self):
         """Отрисовывает яблоко на экране."""
@@ -243,9 +242,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-# НЕ РЕАЛИЗОВАНО ! #
-#     # Затирание последнего сегмента
-#     if self.last:
-#         last_rect = pygame.Rect(self.last, (GRID_SIZE, GRID_SIZE))
-#         pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
