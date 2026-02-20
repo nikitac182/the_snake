@@ -34,9 +34,6 @@ SNAKE_COLOR = (0, 255, 0)
 # Цвет текста
 T_COLOR = (0, 255, 0)
 
-# Скорость движения змейки:
-SPEED = 20
-
 # Настройка игрового окна:
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
 
@@ -160,9 +157,9 @@ class Snake(GameObject):
         в текущем направлении.
         """
         x, y = self.get_head_position()
-        x1, y1 = self.direction
-        x += x1 * GRID_SIZE
-        y += y1 * GRID_SIZE
+        dx, dy = self.direction
+        x += dx * GRID_SIZE
+        y += dy * GRID_SIZE
         x, y = self.check_board(x, y)
         self.positions.insert(0, (x, y))
         self.positions = self.positions[:-1]
@@ -209,8 +206,8 @@ def main():
         screen.fill((0, 0, 0))
         apple.draw()
         handle_keys(snake)
-        for i in range(len(snake.positions)):
-            snake.draw(i)
+        for index in range(snake.length):
+            snake.draw(index)
         snake.move()
         if snake.get_head_position() == apple.position:  # Если съедаем яблоко
             snake.add()  # Добавляем секцию
