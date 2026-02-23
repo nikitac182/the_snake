@@ -87,7 +87,7 @@ class GameObject:
 class Apple(GameObject):
     """Класс яблочка."""
 
-    def __init__(self, position):
+    def __init__(self, position=CENTER_SCREEN):
         """
         Инициализирует объект яблока.
 
@@ -229,7 +229,7 @@ def main():
     font = pg.font.SysFont(FONT_NAME, FONT_SIZE)
 
     snake = Snake()
-    apple = Apple(snake.positions)
+    apple = Apple()
 
     running = True
     while running:
