@@ -26,7 +26,7 @@ GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
 TEXT_POSITION = (500, 30)
 
 # Параметры текста
-FONT_SETTINGS = "Arial", 16
+FONT_SETTINGS = 'Arial', 16
 FONT_NAME, FONT_SIZE = FONT_SETTINGS
 
 # Направления движения:
@@ -152,8 +152,8 @@ class Snake(GameObject):
     def add(self):
         """Добавление сегмента."""
         self.length += 1
-        x, y = self.positions[0]
-        self.positions.append((x, y))
+        coordinates = self.positions[0]
+        self.positions.append(coordinates)
 
     def change_color(self):
         """Меняет цвет змейки."""
@@ -173,12 +173,12 @@ class Snake(GameObject):
 
     def move(self):
         """Двигает змейку на одну клетку."""
-        x, y = self.get_head_position()
+        x_pos, y_pos = self.get_head_position()
         dx, dy = self.direction
-        x += dx * GRID_SIZE
-        y += dy * GRID_SIZE
-        x, y = self.check_board(x, y)
-        self.positions.insert(0, (x, y))
+        x_pos += dx * GRID_SIZE
+        y_pos += dy * GRID_SIZE
+        new_coordinates = self.check_board(x_pos, y_pos)
+        self.positions.insert(0, new_coordinates)
         self.positions = self.positions[:-1]
 
 
