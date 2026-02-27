@@ -8,7 +8,7 @@
 Игра работает на основе сеточной системы координат
 и обновляется с фиксированным FPS.
 """
-from random import randint
+from random import randint, choice
 
 import pygame as pg
 
@@ -24,6 +24,15 @@ GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
 
 # Позиция текста
 TEXT_POSITION = (500, 30)
+
+# Позиции, в которых появится яблоку
+PROHIBITING_POS = [
+    CENTER_SCREEN,
+    (SCREEN_WIDTH + GRID_SIZE, SCREEN_HEIGHT),
+    (SCREEN_WIDTH - GRID_SIZE, SCREEN_HEIGHT),
+    (SCREEN_WIDTH, SCREEN_HEIGHT + GRID_SIZE),
+    (SCREEN_WIDTH, SCREEN_HEIGHT - GRID_SIZE),
+]
 
 # Параметры текста
 FONT_SETTINGS = 'Arial', 16
@@ -53,9 +62,6 @@ SNAKE_COLOR = (0, 255, 0)
 # Цвет текста
 T_COLOR = (0, 255, 0)
 
-# Счет
-score = 0
-
 # Настройка игрового окна:
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
 
@@ -81,13 +87,21 @@ class GameObject:
 
     def draw(self):
         """Метод отрисовки класса (переопределяется в дочерних классах)."""
-        raise NotImplementedError
+        raise NotImplementedError("Метод должен быть переопределен")
+
+    def _draw_cell(self, position, color):
+        """Рисует ячейку сетки с заданным положением и цветом."""
+        position = position or self.position
+        color = color or self.body_color
+        rect = pg.Rect(position, (GRID_SIZE, GRID_SIZE))
+        pg.draw.rect(screen, color, rect)
+        pg.draw.rect(screen, BORDER_COLOR, rect, 1)
 
 
 class Apple(GameObject):
     """Класс яблочка."""
 
-    def __init__(self, position=CENTER_SCREEN):
+    def __init__(self, positions=PROHIBITING_POS):
         """
         Инициализирует объект яблока.
 
@@ -95,7 +109,7 @@ class Apple(GameObject):
         назначает цвет яблока по умолчанию.
         """
         super().__init__()
-        self.randomize_position(position)
+        self.randomize_position(positions)
         self.body_color = APPLE_COLOR
 
     def randomize_position(self, occupied_positions):
@@ -131,13 +145,13 @@ class Snake(GameObject):
             self.next_direction = None
 
     def get_head_position(self):
-        """Возвращает позиция головы змейки."""
+        """Возвращает позицию головы змейки."""
         return self.positions[0]
 
     def reset(self):
         """Сбрасывает змейку к начальному состоянию."""
         self.positions = [CENTER_SCREEN]
-        self.direction = (RIGHT, LEFT, UP, DOWN)[randint(0, 3)]
+        self.direction = choice((RIGHT, LEFT, UP, DOWN))
         self.next_direction = None
         self.body_color = SNAKE_COLOR
         self.length = 1
@@ -149,11 +163,9 @@ class Snake(GameObject):
             pg.draw.rect(screen, self.body_color, head_rect)
             pg.draw.rect(screen, BORDER_COLOR, head_rect, 1)
 
-    def add(self):
-        """Добавление сегмента."""
+    def add_length(self):
+        """Увеличение длины змейки."""
         self.length += 1
-        coordinates = self.positions[0]
-        self.positions.append(coordinates)
 
     def change_color(self):
         """Меняет цвет змейки."""
@@ -163,6 +175,8 @@ class Snake(GameObject):
                 randint(0, 255),
                 randint(0, 255)
             )
+        else:
+            self.body_color = (BOARD_BACKGROUND_COLOR)
 
     def check_board(self, head_x_coord, head_y_coord):
         """Проверяет выход змейки за границы экрана."""
@@ -170,6 +184,10 @@ class Snake(GameObject):
             head_x_coord % SCREEN_WIDTH,
             head_y_coord % SCREEN_HEIGHT,
         )
+
+    def delete_last_segment(self):
+        """Удаляет последний сегмент."""
+        self.positions = self.positions[:-1]
 
     def move(self):
         """Двигает змейку на одну клетку."""
@@ -179,7 +197,6 @@ class Snake(GameObject):
         y_pos += dy * GRID_SIZE
         new_coordinates = self.check_board(x_pos, y_pos)
         self.positions.insert(0, new_coordinates)
-        self.positions = self.positions[:-1]
 
 
 def handle_keys(game_object):
@@ -194,26 +211,14 @@ def handle_keys(game_object):
             raise SystemExit
         if event.type == pg.KEYDOWN:
             key_bindings = {
-                (pg.K_UP): (UP, DOWN),
-                (pg.K_DOWN): (DOWN, UP),
-                (pg.K_LEFT): (LEFT, RIGHT),
-                (pg.K_RIGHT): (RIGHT, LEFT)
+                pg.K_UP: (UP, DOWN),
+                pg.K_DOWN: (DOWN, UP),
+                pg.K_LEFT: (LEFT, RIGHT),
+                pg.K_RIGHT: (RIGHT, LEFT)
             }  # словарь - Клавиша: (нужное зн-е, недопустимое зн-е)
             if event.key in key_bindings:
                 if game_object.direction != key_bindings.get(event.key)[1]:
                     game_object.next_direction = key_bindings.get(event.key)[0]
-
-
-def increase_score():
-    """Увеличивает счет игры."""
-    global score
-    score += 1
-
-
-def reset_score():
-    """Сбрасывает счет игры."""
-    global score
-    score = 0
 
 
 def main():
@@ -223,36 +228,42 @@ def main():
     Управляет:
     - обновлением состояния
     - обработкой событий
-    - отрисовко объектов
+    - отрисовкой объектов
     """
     pg.init()
     font = pg.font.SysFont(FONT_NAME, FONT_SIZE)
 
     snake = Snake()
-    apple = Apple()
+    apple = Apple(snake.positions)
 
     running = True
+    score = 0
+
     while running:
         clock.tick(FPS)
-        screen.fill(BOARD_BACKGROUND_COLOR)
         handle_keys(snake)
-
-        if snake.get_head_position() == apple.position:
-            snake.change_color()
-            snake.add()
-            apple.randomize_position(snake.positions)
-            increase_score()
         snake.update_direction()
         snake.move()
 
-        if snake.get_head_position() in snake.positions[1:]:
+        head_position_func = snake.get_head_position()
+
+        if head_position_func == apple.position:
+            snake.change_color()
+            snake.add_length()
+            apple.randomize_position(snake.positions)
+            score += 1
+        else:
+            snake.delete_last_segment()
+
+        if head_position_func in snake.positions[1:]:
             snake.reset()
             apple.randomize_position(snake.positions)
-            reset_score()
+            score = 0
             screen.fill(BOARD_BACKGROUND_COLOR)
 
         text_surface = font.render(f'Счет игры: {score}', True, T_COLOR)
         screen.blit(text_surface, TEXT_POSITION)
+        screen.fill(BOARD_BACKGROUND_COLOR)
         apple.draw()
         snake.draw()
         pg.display.update()
