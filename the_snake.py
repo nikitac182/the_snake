@@ -8,7 +8,7 @@
 Игра работает на основе сеточной системы координат
 и обновляется с фиксированным FPS.
 """
-from random import randint, choice
+from random import choice, randint
 
 import pygame as pg
 
@@ -87,7 +87,7 @@ class GameObject:
 
     def draw(self):
         """Метод отрисовки класса (переопределяется в дочерних классах)."""
-        raise NotImplementedError("Метод должен быть переопределен")
+        raise NotImplementedError('Метод должен быть переопределен')
 
     def _draw_cell(self, position, color):
         """Рисует ячейку сетки с заданным положением и цветом."""
@@ -245,9 +245,9 @@ def main():
         snake.update_direction()
         snake.move()
 
-        head_position_func = snake.get_head_position()
+        head_position = snake.get_head_position()
 
-        if head_position_func == apple.position:
+        if head_position == apple.position:
             snake.change_color()
             snake.add_length()
             apple.randomize_position(snake.positions)
@@ -255,17 +255,20 @@ def main():
         else:
             snake.delete_last_segment()
 
-        if head_position_func in snake.positions[1:]:
+        if head_position in snake.positions[1:]:
             snake.reset()
             apple.randomize_position(snake.positions)
             score = 0
             screen.fill(BOARD_BACKGROUND_COLOR)
 
-        text_surface = font.render(f'Счет игры: {score}', True, T_COLOR)
-        screen.blit(text_surface, TEXT_POSITION)
         screen.fill(BOARD_BACKGROUND_COLOR)
+
         apple.draw()
         snake.draw()
+
+        text_surface = font.render(f'Счет игры: {score}', True, T_COLOR)
+        screen.blit(text_surface, TEXT_POSITION)
+
         pg.display.update()
 
 
