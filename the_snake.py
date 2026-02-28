@@ -266,7 +266,7 @@ def main():
             snake.reset()
             apple.randomize_position(snake.positions)
             score = 0
-            screen.fill(BOARD_BACKGROUND_COLOR)
+            FPS = 15
 
         screen.fill(BOARD_BACKGROUND_COLOR)
 
