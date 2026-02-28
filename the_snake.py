@@ -13,7 +13,7 @@ from random import choice, randint
 import pygame as pg
 
 # Константы для размеров поля и сетки:
-SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480
+SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480 #Тест 960, 720
 CENTER_SCREEN = (
     SCREEN_WIDTH // 2,
     SCREEN_HEIGHT // 2,
@@ -23,7 +23,8 @@ GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE
 GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
 
 # Позиция текста
-TEXT_POSITION = (500, 30)
+TEXT_POSITION = (SCREEN_WIDTH-140, 30) #Сделал так, 
+#чтобы при увеличении размера экрана надпись не оказывалась в центре
 
 # Позиции, в которых появится яблоку
 PROHIBITING_POS = [
@@ -46,9 +47,6 @@ RIGHT = (1, 0)
 
 # Цвет фона - черный:
 BOARD_BACKGROUND_COLOR = (0, 0, 0)
-
-# FPS
-FPS = 15
 
 # Цвет границы ячейки
 BORDER_COLOR = (93, 216, 228)
@@ -155,6 +153,7 @@ class Snake(GameObject):
         self.next_direction = None
         self.body_color = SNAKE_COLOR
         self.length = 1
+        self.acc = 0
 
     def draw(self):
         """Отрисовывает змейку целиком."""
@@ -199,7 +198,7 @@ class Snake(GameObject):
         self.positions.insert(0, new_coordinates)
 
 
-def handle_keys(game_object):
+def handle_keys(game_object, FPS):
     """
     Обработка событий клавиатуры.
 
@@ -210,6 +209,13 @@ def handle_keys(game_object):
             pg.quit()
             raise SystemExit
         if event.type == pg.KEYDOWN:
+            if event.key == pg.K_LSHIFT:
+                if game_object.acc == 0:
+                    FPS *= 2
+                    game_object.acc = 1
+                else:
+                    FPS //= 2
+                    game_object.acc = 0
             key_bindings = {
                 pg.K_UP: (UP, DOWN),
                 pg.K_DOWN: (DOWN, UP),
@@ -219,7 +225,7 @@ def handle_keys(game_object):
             if event.key in key_bindings:
                 if game_object.direction != key_bindings.get(event.key)[1]:
                     game_object.next_direction = key_bindings.get(event.key)[0]
-
+    return FPS
 
 def main():
     """
@@ -238,10 +244,11 @@ def main():
 
     running = True
     score = 0
+    FPS = 15
 
     while running:
         clock.tick(FPS)
-        handle_keys(snake)
+        FPS = handle_keys(snake, FPS)
         snake.update_direction()
         snake.move()
 
@@ -268,6 +275,8 @@ def main():
 
         text_surface = font.render(f'Счет игры: {score}', True, T_COLOR)
         screen.blit(text_surface, TEXT_POSITION)
+        speed_text = font.render(f'Скорость: {FPS} FPS', True, T_COLOR)
+        screen.blit(speed_text, (50, 30))
 
         pg.display.update()
 
